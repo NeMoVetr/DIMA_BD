@@ -1,0 +1,323 @@
+-- 1 Изменение значения времени в таблице post должность консультант на продавец
+update post
+set Название='Продавец'
+where Название='Консультант';
+-- 2 Изменение зарплаты у работников центра (увеличение в 1.5 раза)
+update post
+set Зарплата=Зарплата*1.5
+-- 3 Изменение количество товаров, у которых количество меньше 5 на 1.
+update model
+set Количество=Количество+1
+where Количество<=5;
+-- 4 Изменение цену работы в услугах, у которых цена ниже 500 
+update servic
+set Работа=Работа+300
+where Работа<500;
+-- 5 Измение дату заказа у клиента Петрова Петра Петровича на новую 2024-03-01
+update client_
+set Дата_заказа='2024-03-01'
+where ФИО='Петров Петр Петрович';
+-- 6 удаление товара из списков 
+delete from model
+where Название='Intel iCore3 3370';
+-- 7 Удаление клиента из базы данных в связи с окончанием работы
+delete from client_
+where ФИО='Иванов Иван Иванович'
+-- 8 Сокращение должности Сборщик
+delete from post
+where Название='Сборщик';
+-- 9 Удаление заказов, у которых более 5 запчастей
+delete from price
+where Количество_запчастей>5;
+-- 10 Удаление закрывшегося отделения по адресу Российская 8
+delete from center
+where Адрес='Российская 8'
+-- 11 подсчитать количество запчастей
+select sum(Количество_запчастей) from price;
+-- 12 Посчитать количество клиентов
+select count(*) as ФИО from client_;
+-- 13 найти названия всех термопаст в центре 
+select Название from equipment where Назначение='Термопаста';
+-- 14 найти всех работников со стажем больше 10 лет
+select * from employee where Стаж>10;
+-- 15 найти всех работников со стажем больше 5, но меньше 10 лет
+select * from employee where Стаж>5 and Стаж<10;
+-- 16 проверка на то NULL в разделе деталь импорта 
+select * from import_ where Деталь is null;
+-- 17 преобразование NULL в разделе названия оборудования
+update equipment
+set Название='неизвестное название'
+where Название is null;
+-- 18 вывести ФИО каждого сотрудника
+select ФИО from employee;
+-- 19 вывести название термопрокладок, количество которых больше 10
+select Название from equipment
+where Назначение='Термопрокладка' and Количество>=10;
+-- 20 вывести Допустимые значения товаров с гарантией
+select Допустимые_значения from specif
+where Гарантия=1;
+-- 21 вывести центры на которых отзывы<3
+select * from center where Отзыв<3;
+-- 22 вывести названия услуг, у которых сложность=2
+select Название_услуги from servic where Объём=2;
+-- 23 вывести все должности, у которых зарплата >30000
+select * from post where Зарплата>=30000;
+-- 24 вывести названия моделий, количество которых больше 15, но меньше 30
+select Название from model
+where Количество between 15 and 30;
+-- 25 вывести цену каждого процессора
+select Деталь, Цена from import_
+where Товар='Процессор';
+-- 26 вывести все отзывы о центрах на улице российская 
+select Отзыв from center where Адрес like 'Российская %';
+-- 27 вывести всех сотрудников с именем Александр
+select * from employee where ФИО like '%Александр%'
+-- 28 вывести количество всего оборудования, начинающегося с «Термо»
+select Количество from equipment where Назначение like 'Термо%'
+-- 29 вывести всех клиентов с именем Павел
+select * from client_ where ФИО like '%Павел%';
+-- 30 вывести все характеристики, в допустимых значениях которых есть число 35
+select * from specif where Допустимые_значения like '%35%'
+-- 31 вывести все товары Intel и Ryzen
+select * from model where Название like '%Intel%' or Название like '%Ryzen%'
+-- 32 скопировать данные из таблицы price в price_v2
+create table price_v2 (
+    id_worker int,
+	price_id INT primary key auto_increment,
+    кол_запчасти int,
+    оплата int
+);
+insert into price_v2 
+select * from price;
+-- 33 скопировать данные о цене только для тех изделий, которые требуют 3 запчасти
+insert into price_v2
+Select * into price_v2
+from price where Количество_запчастей=3
+-- 34 скопировать данные где оплата = 300
+insert into price_v2
+select *from price
+where Оплата = 300;
+-- 35 вывести зарплату каждого сотрудника и адрес его работы
+select post.employee_id , Зарплата, center.Адрес from post
+join center on post.employee_id = center.employee_id;
+-- 36 вывести ФИО клиентов которые сложность и название услуги 
+select ФИО, название_услуги from client_
+join servic on servic.servic_id = client_.servic_id;
+-- 37 вывести название детали сложость работы и ФИО сотрдуника
+select import_.product_id Деталь, Сложность, ФИО from import_
+join center on center.product_id = import_.product_id 
+join servic on servic.servic_id = center.servic_id
+join employee on employee.employee_id = center.employee_id; 
+-- 38 вывести название модели гарантию ремонта
+select type_id, Название, Гарантия from model 
+join specif on specif.name_id = model.name_id; 
+-- 39 вывести ФИО стаж должность и зарплату сотрудника
+select employee.employee_id, ФИО, Стаж, Название, Зарплата from employee 
+join post on employee.employee_id = post.employee_id;
+-- 40 склеить таблицы сервис заказанные детали для ремонта и оборудование
+select * from center
+right join servic on servic.servic_id=center.servic_id
+join equipment on equipment.equip_id=center.equip_id
+join import_ on import_.product_id=center.product_id; 
+-- 41 вывести количество и цену товара импорта (много ко многим)
+select Деталь, Цена, Количество from import_
+left join model on import_.Product_id=model.type_id;
+  -- 42 вывести характеристики каждого инструмента
+select * from equipment
+left join specif on equipment.name_id=specif.name_id; 
+  -- 43 применение команды cross join
+select * from center
+cross join servic
+cross join import_ 
+ -- 44 применение команды natural join
+ select * from center
+natural join servic 
+ -- 45 применение outer join 
+ select * from center
+inner join servic on servic.work_id=center.servic_id; 
+ -- 50 вывести должность и зарплату у Александра Михаиловича Комченкова
+select ФИО, Стаж, Зарплата from employee
+left join Post on post.employee_id=employee.employee_id
+where ФИО='Александр Михаилович Комченков';
+-- 51 вывести цену за работу, которую должен Иванов Илья Ильич
+select ФИО, Оплата from client_
+left join price  on client_.price_id=price.price_id
+where ФИО='Иванов Илья Ильич' 
+ -- 52 вывести количество заменённых деталей у каждого клиента
+ select ФИО, Объём from client_
+left join servic  on client_.servic_id=servic.servic_id
+ -- 53 вывести связи центра в  таблицу 
+select * from center
+left join servic on servic.work_id=center.servic_id
+left join employee on employee.employee_id=center.employee_id
+left join import_ on import_.product_id=center.product_id
+left join equipment on equipment.equip_id=center.equip_id;
+-- 54 вывести название должности Руслана Ивановича Нясибуллина
+ select ФИО, Название from employee
+left join Post on post.employee_id=employee.employee_id
+where ФИО='Руслан Иванович Нясибуллин'  
+-- 56 вывести общую прибыль с работы
+select sum(Оплата) from price;
+-- 57 подсчитать количество запчастей
+select sum(Количество_запчастей) from price;
+-- 58 Посчитать количество клиентов
+select count(*) as ФИО from client_;
+
+-- 59 подсчитаем среднюю зарплату в компании среди сборщиков
+select avg(Зарплата) from post
+where Название='Сборщик'
+-- 60 найти отзыв с максимальной оценкой и выписать адрес
+select  Адрес from center
+where max(Отзыв);
+
+-- 61 Вывести дату самого дорогого заказа
+select Дата_заказа from client_
+left join price  on price.work_id=client_.price_id
+group by Дата_заказа,Оплата
+order by Оплата desc
+limit 1;
+-- 62 вывести таблицу работников группируя их по зарплате от 50000
+select ФИО,Зарплата from employee
+ join post on post.employee_id=employee.employee_id
+ group by Зарплата,ФИО
+ having Зарплата>50000;
+-- 63 показать топ-5 отсортированных по стоимости товара 
+select Деталь, Цена from import_
+group by Деталь, Цена
+order by Цена desc
+limit 5;
+-- 64 показать топ-5 отсортированных от минимальной стоимости товара 
+select Деталь, Цена from import_
+group by Деталь, Цена
+order by Цена asc
+limit 5;
+-- 65 показать топ-5 самых высокооплачиваемых работников 
+select ФИО,Зарплата from employee
+ join post on post.employee_id=employee.employee_id
+ group by Зарплата,ФИО
+ order by Зарплата desc
+ limit 5;
+-- 66 показать отсортированный по дате заказа список пользователей 
+select ФИО from client_
+order by Дата_заказа desc;
+-- 67 отсортировать и вывести названия товара и его цену по количеству
+select Деталь, Цена from import_
+left join import_type on import_type.product_id=import_.product_id
+order by Количество desc;
+-- 68 отсортировать и вывести названия инструментов по количеству
+select Название from equipment
+order by Количество desc;
+-- 69 среднюю цену одной детали 
+select sum(Оплата)/sum(Количество_запчастей) from price;
+-- 70 вывести название оборудования и допустимые характеристики отсортированной таблицы по их количеству  
+select Название, Допустимые_значения from equipment
+left join specif on specif.name_id=equipment.name_id
+order by Количество desc;
+-- 71 вывести отсортированную таблицу клиентов сортируя их по фио 
+select * from client_
+order by client_.ФИО asc;
+-- 72 применение union
+select Адрес from center where employee_id=10 
+union 
+select ФИО from employee where employee_id=10;
+-- 73 2 применение union
+select ФИО from employee where employee_id=10 
+union 
+select Название from post where employee_id=10;
+-- 74 3 применение union
+select Название_услуги from servic where servic_id=10 
+union 
+select ФИО from client_ where servic_id=10;
+-- 75 Найти все профессии зарплата которых больше средней зарплаты  
+select Название from post
+where (select avg(Зарплата) from post )<Зарплата;
+-- 76 Найти все профессии зарплата которых меньше средней зарплаты  
+select Название from post
+where (select avg(Зарплата) from post )>Зарплата; 
+-- 77 вывести фамилии работников, у которых зарплата меньше средней
+select ФИО from employee
+left join post on post.employee_id=employee.employee_id
+where (select avg(Зарплата) from post )>Зарплата; 
+-- 78 вывести фамилии работников, у которых зарплата больше средней
+select ФИО from employee
+left join post on post.employee_id=employee.employee_id
+where (select avg(Зарплата) from post )<Зарплата;
+-- 79 найти цену работы с определенным количеством деталей 
+select Оплата from price
+where (select price.Количество_запчастей between 5 and 10);
+-- 80 вывести среднее кол-во и среднюю стоимость для товаров
+select avg(Цена), avg(Количество) from import_
+left join import_type on import_type.product_id=import_.product_id
+-- 81 использование GROUP_CONCAT для группировки всех товаров по названию
+select Допустимые_значения, group_concat(distinct Название separator',') as Название from equipment
+join specif on specif.name_id=equipment.name_id group by Допустимые_значения;
+-- 82 Использование функции CONCAT для создания контактных данных клиента из его составляющих частей
+select concat(ФИО,',',Дата_заказа) from client_;
+-- Составление запросов  с WITH
+-- 83 показать товары у которых стоимсоть выше средней
+with  table_avg_cost as (select avg(Цена)as avg_cost from import_)
+select *from import_ where (select avg_cost from table_avg_cost)<Цена
+-- 84 вывести пользователей которые заказ по месяцам дольше среднего количества месяцев на услугу 
+with table_avg_month as (select avg((month(CURRENT_DATE) - MONTH(Дата_заказа)) - (DATE_FORMAT(CURRENT_DATE, '%m%d') < DATE_FORMAT(Дата_заказа, '%m%d')) )as avg_month from client_)
+select *from client_ where (select avg_month from table_avg_month)>(MONTH(CURRENT_DATE) - MONTH(Дата_заказа)) - (DATE_FORMAT(CURRENT_DATE, '%m%d') < DATE_FORMAT(Дата_заказа, '%m%d'));
+-- 85 вывести всех клиентов, у которых детелей на замену больше среднего количества деталей
+with table_avg_count as (select avg(Количество_запчастей) as avg_count from price) 
+select ФИО from price 
+join client_ on client_.price_id=price.price_id
+where (select avg_count from table_avg_count)<(Количество_запчастей);
+-- 86 Преобразование ФИО в нижний регистр
+select lower(ФИО) from client_;
+-- 87 Объединение двух строк, чтобы получить более подробную информацию о товарах
+select concat(Название,' - ', Допустимые_значения) from equipment
+left join specif on specif.name_id=equipment.name_id;
+-- 88 Форматирование даты доставки в нужный формат 
+select date_format(Дата_заказа ,'%d-%m-%Y') from client_;
+-- 89 вычисление количества месяцев на обработку заказа клиентов 
+select ФИО, (month(current_date())-month(Дата_заказа)) from client_
+-- 90 среднюю цену одной детали 
+select sum(Оплата)/sum(Количество_запчастей) from price;
+-- 91 Получить список из 3 самых дорогих заказов, у которых меньше 2 деталей
+select Название_услуги from servic
+left join price on price.work_id=servic.work_id
+group by Количество_запчастей,Оплата,Название_услуги
+having Количество_запчастей<2
+order by Оплата desc
+limit 3;
+-- 92 получить список из 5 работников, у которых самая большая зарплата 
+select * from employee
+left join post on post.employee_id=employee.employee_id
+order by Зарплата desc
+limit 5
+-- 93 получить список из 5 самых дорогих деталей, количество которых больше 10 
+select Деталь from import_
+left join import_type on import_type.product_id=import_.product_id
+group by Количество,Цена,Деталь
+having Количество>10
+order by Цена desc
+limit 5
+-- 94 получить список из 5 самых больших по количеству инструментов по гарантии 
+select Название from equipment
+join specif on specif.name_id=equipment.name_id
+group by Гарантия,Количество,Название
+having Гарантия
+order by Количество desc
+limit 5;
+-- 95 вывести топ-10 клиентов по количеству замененных деталей в заказе 
+select ФИО from client_
+left join price on price.price_id=client_.price_id
+order by Количество_запчастей desc 
+limit 10;
+-- 96 Удаление закрывшегося отделения по адресу Российская 8
+delete from center
+where Адрес='Российская 8'
+-- 97 вывести Допустимые значения товаров с гарантией
+select Допустимые_значения from specif
+-- 98 вывести все характеристики, в допустимых значениях которых есть число 35
+select * from specif where Допустимые_значения like '%35%'
+-- 99 вывести ФИО стаж должность и зарплату сотрудника
+select employee.employee_id, ФИО, Стаж, Название, Зарплата from employee 
+join post on employee.employee_id = post.employee_id;
+-- 100 вывести должность и зарплату у Александра Михаиловича Комченкова
+select ФИО, Стаж, Зарплата from employee
+left join Post on post.employee_id=employee.employee_id
+where ФИО='Александр Михаилович Комченков';
