@@ -1,0 +1,151 @@
+Процедуры
+-- Процедура для увеличения зарплаты
+DELIMITER //
+CREATE PROCEDURE NewSalary(IN Id INT, IN dop INT)
+BEGIN
+    UPDATE Post SET Зарплата = Зарплата+dop WHERE employee_id = Id;
+END //
+DELIMITER ;
+
+CALL NewSalary(2, 500);
+ 
+
+-- Процедура для изменения отзыва
+DELIMITER //
+CREATE PROCEDURE NewRating(IN ItsId INT, IN dop INT)
+BEGIN
+    DECLARE Rating INT;
+    SET Rating=-1;
+    SELECT Отзыв+dop INTO Rating FROM center where id=itsid;
+    IF Rating > 5 or Rating<0 THEN
+        SELECT 'Невозможная оценка';
+    ELSE
+         UPDATE center SET Отзыв=Rating WHERE id = ItsId;
+         SELECT * FROM center;
+    END IF;
+END //
+DELIMITER ;
+call NewRating(1,-2)
+ 
+call NewRating(5,7)
+ 
+-- Процедура проверки на гарантию
+DELIMITER //
+CREATE PROCEDURE NameProduct(IN ItsId INT)
+BEGIN
+	DECLARE Статус VARCHAR(50);
+    DECLARE Знач VARCHAR(50);
+    Set Знач='';
+    select Название into Знач from equipment where ItsId=equip_id;
+    SELECT 
+        CASE 
+            WHEN Гарантия = 1 THEN Знач
+            WHEN Гарантия = 0 THEN 'Нет'
+        END INTO Статус
+    FROM specif WHERE name_id = ItsId;
+    SELECT Статус;
+END //
+DELIMITER ;
+
+call NameProduct(9)
+ 
+Функции
+-- Функция определения количества импортированных деталей
+DELIMITER //
+CREATE FUNCTION CountDetail(ItsId INT)
+RETURNS int
+DETERMINISTIC
+BEGIN
+    DECLARE кол INT;
+    DECLARE name1 VARCHAR(128);
+    DECLARE name2 VARCHAR(128);
+    DECLARE count1 INT;
+    DECLARE count2 INT;
+    SELECT Деталь INTO name1 FROM import_ where product_id=itsid;
+    SELECT Название INTO name2 FROM model where type_id=itsid;
+    SELECT Количество INTO count1 FROM import_type where product_id=itsid;
+    SELECT Количество INTO count2 FROM model where type_id=itsid;
+    IF name1!= name2 THEN
+        SET кол = count1-count2;
+    ELSE
+        SET кол = count1;
+    END IF;
+    RETURN кол;
+END //
+DELIMITER ;
+SELECT Деталь, CountDetail(product_id) AS Количества FROM import_;
+ 
+-- Функция определения количество заказов за день
+DELIMITER //
+CREATE function  CountDate(ItsId INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE count INT;
+    SET count=0;
+    SELECT count(Дата_заказа) INTO count FROM client_ where servic_id=itsid;
+    return count;
+END //
+DELIMITER ;
+select Дата_заказа, CountDate(servic_id) as Количество from client_
+ 
+-- Функция определения цены за деталь
+DELIMITER //
+CREATE function  PriceDetail(ItsId INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE Prices INT;
+    DECLARE PriceWork INT;
+    DECLARE countes INT;
+    DECLARE Result INT;
+    SET Prices=0;
+    SET PriceWork=0;
+    SET countes=0;
+    SET Result=0;
+    SELECT Количество_запчастей INTO countes FROM price where price.work_id=itsid;
+    SELECT Оплата INTO Prices FROM price where price.work_id=itsid;
+    SELECT Работа INTO PriceWork FROM servic where servic.work_id=itsid;
+    IF countes > 0 THEN
+		SET Result=((Prices-PriceWork)/countes);
+	ELSE SET Result=0;
+    END IF;
+    return Result;
+END //
+DELIMITER ;
+select Название_услуги, PriceDetail(servic_id) as Цена from servic;
+
+ 
+Представления
+-- Представление для отображения адреса работы каждого работника
+CREATE VIEW EmployeeInfo AS
+	SELECT center.employee_id, Адрес, ФИО FROM center 
+    JOIN employee ON employee.employee_id = center.employee_id;
+select * from EmployeeInfo
+ 
+-- Представление для отображения каждой заказанной детали
+CREATE VIEW CountProduct AS
+	SELECT import_.Деталь, Количество FROM import_ 
+    JOIN import_type ON import_.product_id = import_type.product_id;
+select * from CountProduct
+ 
+
+-- Представление для отображения информации об инструментах
+CREATE VIEW DataEquipment AS
+	SELECT Название, specif.Гарантия, specif.Допустимые_значения, Количество FROM specif 
+    JOIN Equipment ON Equipment.name_id = specif.name_id;
+select * from DataEquipment
+ 
+Триггер
+--  триггер, который автоматически изменяет значение количество в таблице import_type на новое значение в таблице model
+CREATE TRIGGER newСount
+	AFTER update ON model
+	FOR EACH ROW
+    UPDATE import_type SET Количество = NEW.Количество WHERE type_id = OLD.type_id;
+-- Пример использования триггера
+update model set Количество=8 where type_id=3;
+
+select * from model;
+select * from import_type;
+ 
+ 
